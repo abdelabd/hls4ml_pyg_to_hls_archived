@@ -1,31 +1,52 @@
 #ifndef PARAMETERS_H_
 #define PARAMETERS_H_
 
-#include <complex>
 #include "ap_int.h"
 #include "ap_fixed.h"
-#include "../../../hls4ml/templates/vivado/nnet_utils/nnet_activation.h"
-#include "../../../hls4ml/templates/vivado/nnet_utils/nnet_graph.h"
-#include "../../../hls4ml/templates/vivado/nnet_utils/nnet_common.h"
 
-//hls-fpga-machine-learning insert numbers
-typedef ap_fixed<16,6> accum_default_t;
-typedef ap_fixed<16,6> weight_default_t;
-typedef ap_fixed<16,6> bias_default_t;
-typedef ap_fixed<16,6> model_default_t;
-typedef ap_fixed<16,6> input_t;
-typedef ap_fixed<16,6> result_t;
-typedef ap_uint<16> index_t;
-#define REUSE_GRAPH 1
-#define REUSE_DENSE 1
-#define N_ITERS 1
-#define LATENT 8
-#define N_FEATURES 3
-#define E_FEATURES 4
-//graph_nets simple example:
-#define N_NODES_MAX 112
-#define N_EDGES_MAX 148
+#include "nnet_utils/nnet_helpers.h"
+//hls-fpga-machine-learning insert includes
+#include "nnet_utils/nnet_activation.h"
+#include "nnet_utils/nnet_dense.h"
+#include "nnet_utils/nnet_dense_resource.h"
+#include "nnet_utils/nnet_graph.h"
+#include "nnet_utils/nnet_merge.h"
 
+//hls-fpga-machine-learning insert weights
+#include "weights/encoder_node_w0.h"
+#include "weights/encoder_node_b0.h"
+#include "weights/encoder_node_w1.h"
+#include "weights/encoder_node_b1.h"
+#include "weights/encoder_edge_w0.h"
+#include "weights/encoder_edge_b0.h"
+#include "weights/encoder_edge_w1.h"
+#include "weights/encoder_edge_b1.h"
+#include "weights/core_edge_w0.h"
+#include "weights/core_edge_b0.h"
+#include "weights/core_edge_w1.h"
+#include "weights/core_edge_b1.h"
+#include "weights/core_edge_w2.h"
+#include "weights/core_edge_b2.h"
+#include "weights/core_edge_w3.h"
+#include "weights/core_edge_b3.h"
+#include "weights/core_node_w0.h"
+#include "weights/core_node_b0.h"
+#include "weights/core_node_w1.h"
+#include "weights/core_node_b1.h"
+#include "weights/core_node_w2.h"
+#include "weights/core_node_b2.h"
+#include "weights/core_node_w3.h"
+#include "weights/core_node_b3.h"
+#include "weights/decoder_edge_w0.h"
+#include "weights/decoder_edge_b0.h"
+#include "weights/decoder_edge_w1.h"
+#include "weights/decoder_edge_b1.h"
+#include "weights/decoder_edge_w2.h"
+#include "weights/decoder_edge_b2.h"
+#include "weights/decoder_edge_w3.h"
+#include "weights/decoder_edge_b3.h"
+
+#include "defines.h"
 //hls-fpga-machine-learning insert layer-config
 
 struct graph_config1 : nnet::graph_config {
@@ -152,7 +173,14 @@ struct graph_config3 : nnet::graph_config {
   static const unsigned n_layers = 2;
   typedef bias_default_t bias_t;
   typedef weight_default_t weight_t;
-
+  struct merge_config1 : nnet::merge_config {
+    static const unsigned n_elem1_0 = e_features;
+    static const unsigned n_elem2_0 = n_features;
+  };
+  struct merge_config2 : nnet::merge_config {
+    static const unsigned n_elem1_0 = e_features+n_features;
+    static const unsigned n_elem2_0 = n_features;
+  };
   struct dense_config1 : nnet::dense_config {
     static const unsigned n_in = e_features + 2*n_features;
     static const unsigned n_out = LATENT;
@@ -215,7 +243,10 @@ struct graph_config4 : nnet::graph_config {
   static const unsigned n_layers = 2;
   typedef bias_default_t bias_t;
   typedef weight_default_t weight_t;
-
+  struct merge_config1 : nnet::merge_config {
+    static const unsigned n_elem1_0 = e_features;
+    static const unsigned n_elem2_0 = n_features;
+  };
   struct dense_config1 : nnet::dense_config {
     static const unsigned n_in = e_features + n_features;
     static const unsigned n_out = LATENT;

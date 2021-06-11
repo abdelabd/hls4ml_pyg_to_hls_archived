@@ -2,61 +2,6 @@
 #include "parameters.h"
 #include "myproject.h"
 
-#include "../../../hls4ml/templates/vivado/nnet_utils/nnet_activation.h"
-#include "../../../hls4ml/templates/vivado/nnet_utils/nnet_dense_large.h"
-#include "../../../hls4ml/templates/vivado/nnet_utils/nnet_common.h"
-#include "../../../hls4ml/templates/vivado/nnet_utils/nnet_helpers.h"
-#include "../../../hls4ml/templates/vivado/nnet_utils/nnet_graph.h"
-
-//insert weights from training
-#include "weights/encoder_node_w0.h"
-#include "weights/encoder_node_b0.h"
-#include "weights/encoder_node_w1.h"
-#include "weights/encoder_node_b1.h"
-#include "weights/encoder_edge_w0.h"
-#include "weights/encoder_edge_b0.h"
-#include "weights/encoder_edge_w1.h"
-#include "weights/encoder_edge_b1.h"
-#include "weights/core_edge_w0.h"
-#include "weights/core_edge_b0.h"
-#include "weights/core_edge_w1.h"
-#include "weights/core_edge_b1.h"
-#include "weights/core_edge_w2.h"
-#include "weights/core_edge_b2.h"
-#include "weights/core_edge_w3.h"
-#include "weights/core_edge_b3.h"
-#include "weights/core_node_w0.h"
-#include "weights/core_node_b0.h"
-#include "weights/core_node_w1.h"
-#include "weights/core_node_b1.h"
-#include "weights/core_node_w2.h"
-#include "weights/core_node_b2.h"
-#include "weights/core_node_w3.h"
-#include "weights/core_node_b3.h"
-#include "weights/decoder_edge_w0.h"
-#include "weights/decoder_edge_b0.h"
-#include "weights/decoder_edge_w1.h"
-#include "weights/decoder_edge_b1.h"
-#include "weights/decoder_edge_w2.h"
-#include "weights/decoder_edge_b2.h"
-#include "weights/decoder_edge_w3.h"
-#include "weights/decoder_edge_b3.h"
-
-/* Weight Matrices Dimensions
-Encoder (3,128)
-Core (256,128) Then concatenate first encoded features for 128 --> 256
-Decoder (256,128)
-Output (128,1)
-
-
-//parameters
-#define N_NODES 2714
-#define N_FEATURES 3
-#define N_EDGES 24758
-#define E_FEATURES 4
-#define LATENT 128
-*/
-
 void myproject(
 	       input_t      N[N_NODES_MAX][N_FEATURES],
 	       input_t      E[N_EDGES_MAX][E_FEATURES],

@@ -2,9 +2,9 @@
 #    HLS4ML
 #################
 array set opt {
-  reset      0
+  reset      1
   csim       1
-  synth      0
+  synth      1
   cosim      0
   validation 0
   export     0
@@ -55,21 +55,17 @@ if {$opt(reset)} {
   open_project myproject_prj
 }
 set_top myproject
-add_files myproject.cpp -cflags "-std=c++0x"
-add_files -tb tb_input_node_features.dat
-add_files -tb tb_input_edge_features.dat
-add_files -tb tb_receivers.dat
-add_files -tb tb_senders.dat
-add_files -tb tb_output_edge_predictions.dat
-add_files -tb myproject_test.cpp -cflags "-std=c++0x"
-add_files -tb weights
+add_files firmware/myproject.cpp -cflags "-std=c++0x -I[file normalize ../../../hls4ml/templates/vivado]"
+add_files -tb myproject_test.cpp -cflags "-std=c++0x -I[file normalize ../../../hls4ml/templates/vivado]"
+add_files -tb firmware/weights
 add_files -tb tb_data
 if {$opt(reset)} {
-  open_solution -reset "solution_rf1"
+  open_solution -reset "solution1"
 } else {
-  open_solution "solution_rf1"
+  open_solution "solution1"
 }
 catch {config_array_partition -maximum_size 4096}
+config_compile -name_max_length 60
 set_part {xcku115-flvb2104-2-i}
 create_clock -period 5 -name default
 
@@ -93,7 +89,7 @@ if {$opt(synth)} {
 if {$opt(cosim)} {
   puts "***** C/RTL SIMULATION *****"
   # TODO: This is a workaround (Xilinx defines __RTL_SIMULATION__ only for SystemC testbenches).
-  add_files -tb myproject_test.cpp -cflags "-std=c++0x -DRTL_SIM -I[file normalize ../../hls4ml/templates/vivado]"
+  add_files -tb myproject_test.cpp -cflags "-std=c++0x -DRTL_SIM -I[file normalize ../../../hls4ml/templates/vivado]"
   set time_start [clock clicks -milliseconds]
   cosim_design -trace_level all
   set time_end [clock clicks -milliseconds]

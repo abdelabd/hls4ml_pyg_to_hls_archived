@@ -1,34 +1,34 @@
 #ifndef PARAMETERS_H_
 #define PARAMETERS_H_
 
-#include <complex>
 #include "ap_int.h"
 #include "ap_fixed.h"
-#include "../../../hls4ml/templates/vivado/nnet_utils/nnet_activation.h"
-#include "../../../hls4ml/templates/vivado/nnet_utils/nnet_graph.h"
-#include "../../../hls4ml/templates/vivado/nnet_utils/nnet_common.h"
 
-//hls-fpga-machine-learning insert numbers
-typedef ap_fixed<16,6> accum_default_t;
-typedef ap_fixed<16,6> weight_default_t;
-typedef ap_fixed<16,6> bias_default_t;
-typedef ap_fixed<16,6> model_default_t;
-typedef ap_fixed<16,6> input_t;
-typedef ap_fixed<16,6> result_t;
-typedef ap_uint<16> index_t;
-#define PRAGMA_SUB(x) _Pragma (#x)
-#define DO_PRAGMA(x) PRAGMA_SUB(x)
-#define REUSE_GRAPH 8
-#define REUSE_DENSE 1
-#define N_ITERS 1
-#define LATENT_EDGE 8 //40
-#define LATENT_NODE 8 //40
-#define N_FEATURES 3
-#define E_FEATURES 1 //4
-//graph_nets simple example:
-#define N_NODES_MAX 28 //28 112
-#define N_EDGES_MAX 37 //37 148
+#include "nnet_utils/nnet_helpers.h"
+//hls-fpga-machine-learning insert includes
+#include "nnet_utils/nnet_activation.h"
+#include "nnet_utils/nnet_dense.h"
+#include "nnet_utils/nnet_dense_resource.h"
+#include "nnet_utils/nnet_graph.h"
+#include "nnet_utils/nnet_merge.h"
 
+//hls-fpga-machine-learning insert weights
+#include "weights/core_edge_w0.h"
+#include "weights/core_edge_b0.h"
+#include "weights/core_edge_w1.h"
+#include "weights/core_edge_b1.h"
+#include "weights/core_edge_w2.h"
+#include "weights/core_edge_b2.h"
+#include "weights/core_edge_w3.h"
+#include "weights/core_edge_b3.h"
+#include "weights/core_node_w0.h"
+#include "weights/core_node_b0.h"
+#include "weights/core_node_w1.h"
+#include "weights/core_node_b1.h"
+#include "weights/core_node_w2.h"
+#include "weights/core_node_b2.h"
+
+#include "defines.h"
 //hls-fpga-machine-learning insert layer-config
 
 struct graph_config1 : nnet::graph_config {
@@ -42,7 +42,14 @@ struct graph_config1 : nnet::graph_config {
   static const bool activate_final = false;
   static const unsigned reuse_factor = REUSE_GRAPH;
   static const unsigned n_layers = 3;
-
+  struct merge_config1 : nnet::merge_config {
+    static const unsigned n_elem1_0 = E_FEATURES;
+    static const unsigned n_elem2_0 = N_FEATURES;
+  };
+  struct merge_config2 : nnet::merge_config {
+    static const unsigned n_elem1_0 = E_FEATURES+N_FEATURES;
+    static const unsigned n_elem2_0 = N_FEATURES;
+  };
   struct dense_config1 : nnet::dense_config {
     static const unsigned n_in = e_features + 2*n_features;
     static const unsigned n_out = n_hidden;
@@ -107,7 +114,10 @@ struct graph_config2 : nnet::graph_config {
   static const bool activate_final = false;
   static const unsigned reuse_factor = REUSE_GRAPH;
   static const unsigned n_layers = 3;
-
+  struct merge_config1 : nnet::merge_config {
+    static const unsigned n_elem1_0 = E_FEATURES;
+    static const unsigned n_elem2_0 = N_FEATURES;
+  };
   struct dense_config1 : nnet::dense_config {
     static const unsigned n_in = e_features + n_features;
     static const unsigned n_out = n_hidden;
@@ -135,7 +145,7 @@ struct graph_config2 : nnet::graph_config {
     typedef bias_default_t bias_t;
     typedef weight_default_t weight_t;
   };
-  struct relu_config_2 : nnet_activ_config {
+  struct relu_config_2 : nnet::activ_config {
     static const unsigned n_in = n_hidden;
     static const unsigned table_size = 1024;
     static const unsigned io_type = nnet::io_parallel;    
@@ -173,7 +183,14 @@ struct graph_config3 : nnet::graph_config {
   static const bool activate_final = true;
   static const unsigned reuse_factor = REUSE_GRAPH;
   static const unsigned n_layers = 3;
-
+  struct merge_config1 : nnet::merge_config {
+    static const unsigned n_elem1_0 = E_FEATURES;
+    static const unsigned n_elem2_0 = N_FEATURES;
+  };
+  struct merge_config2 : nnet::merge_config {
+    static const unsigned n_elem1_0 = E_FEATURES+N_FEATURES;
+    static const unsigned n_elem2_0 = N_FEATURES;
+  };
   struct dense_config1 : nnet::dense_config {
     static const unsigned n_in = e_features + 2*n_features;
     static const unsigned n_out = n_hidden;
@@ -217,7 +234,7 @@ struct graph_config3 : nnet::graph_config {
     typedef bias_default_t bias_t;
     typedef weight_default_t weight_t;
   };
-  struct relu_config1 : nnet::activ_config {};
+  struct relu_config3 : nnet::activ_config {};
   struct dense_config4 : nnet::dense_config {
     static const unsigned n_in = 1;
     static const unsigned n_out = 1;

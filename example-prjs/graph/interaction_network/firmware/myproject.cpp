@@ -1,28 +1,5 @@
 #include <iostream>
-#include "parameters.h"
 #include "myproject.h"
-
-#include "../../../hls4ml/templates/vivado/nnet_utils/nnet_activation.h"
-#include "../../../hls4ml/templates/vivado/nnet_utils/nnet_dense_large.h"
-#include "../../../hls4ml/templates/vivado/nnet_utils/nnet_common.h"
-#include "../../../hls4ml/templates/vivado/nnet_utils/nnet_helpers.h"
-#include "../../../hls4ml/templates/vivado/nnet_utils/nnet_graph.h"
-
-//insert weights from training
-#include "weights/core_edge_w0.h"
-#include "weights/core_edge_b0.h"
-#include "weights/core_edge_w1.h"
-#include "weights/core_edge_b1.h"
-#include "weights/core_edge_w2.h"
-#include "weights/core_edge_b2.h"
-#include "weights/core_edge_w3.h"
-#include "weights/core_edge_b3.h"
-#include "weights/core_node_w0.h"
-#include "weights/core_node_b0.h"
-#include "weights/core_node_w1.h"
-#include "weights/core_node_b1.h"
-#include "weights/core_node_w2.h"
-#include "weights/core_node_b2.h"
 
 void myproject(
 	       input_t      N[N_NODES_MAX][N_FEATURES],
@@ -36,10 +13,9 @@ void myproject(
   //hls-fpga-machine-learning insert IO
 #pragma HLS ARRAY_RESHAPE variable=N complete dim=0
 #pragma HLS ARRAY_RESHAPE variable=E complete dim=0
-#pragma HLS ARRAY_RESHAPE variable=receivers complete dim=0
-#pragma HLS ARRAY_RESHAPE variable=senders complete dim=0
+#pragma HLS ARRAY_RESHAPE variable=edge_index complete dim=0
 #pragma HLS ARRAY_RESHAPE variable=e complete dim=0
-#pragma HLS INTERFACE ap_vld port=N,E,receivers,senders,e
+#pragma HLS INTERFACE ap_vld port=N,E,edge_index,e
 //#pragma HLS DATAFLOW
 
   const_size_in	= N_NODES_MAX*N_FEATURES+N_EDGES_MAX*E_FEATURES+N_EDGES_MAX*2;

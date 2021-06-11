@@ -1,13 +1,15 @@
 #include <fstream>
 #include <iostream>
+#include <algorithm>
+#include <vector>
+#include <map>
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <vector>
 
-#include "parameters.h"
-#include "myproject.h"
-#include "nnet_helpers.h"
+#include "firmware/parameters.h"
+#include "firmware/myproject.h"
+#include "nnet_utils/nnet_helpers.h"
 
 
 int main(int argc, char **argv)
@@ -19,7 +21,7 @@ int main(int argc, char **argv)
   index_t      edge_index_str[N_EDGES_MAX][2];
   float        e_expected[N_EDGES_MAX][1];
 
-  std::ifstream Nin("tb_input_node_features.dat");
+  std::ifstream Nin("tb_data/tb_input_node_features.dat");
   float num_n;
   std::vector<input_t> N_in;
   while (Nin >> num_n){
@@ -36,7 +38,7 @@ int main(int argc, char **argv)
     }
   }
 
-  std::ifstream Ein("tb_input_edge_features.dat");
+  std::ifstream Ein("tb_data/tb_input_edge_features.dat");
   float num_e;
   std::vector<input_t> E_in;
   while (Ein >> num_e){
@@ -53,7 +55,7 @@ int main(int argc, char **argv)
     }
   }
 
-  std::ifstream rin("tb_receivers.dat");
+  std::ifstream rin("tb_data/tb_receivers.dat");
   int num_r;
   std::vector<index_t> r_in;
   while (rin >> num_r){
@@ -68,7 +70,7 @@ int main(int argc, char **argv)
     //std::cout << "r input = " << r_in[i] << std::endl;
   }
 
-  std::ifstream sin("tb_senders.dat");
+  std::ifstream sin("tb_data/tb_senders.dat");
   int num_s;
   std::vector<index_t> s_in;
   while (sin >> num_s){
@@ -83,7 +85,7 @@ int main(int argc, char **argv)
     //std::cout << "s input = " << s_in[i] << std::endl;
   }
 
-  std::ifstream ein("tb_output_edge_predictions.dat");
+  std::ifstream ein("tb_data/tb_output_edge_predictions.dat");
   float num_out;
   std::vector<float> e_in;
   while (ein >> num_out){
@@ -119,7 +121,7 @@ int main(int argc, char **argv)
   std::cout << std::endl;
 
   std::ofstream eout;
-  eout.open("tb_output_edge_labels.dat");
+  eout.open("tb_data/tb_output_edge_labels.dat");
   if(e_in.size() < N_EDGES_MAX){
     for(int i = 0; i < e_in.size(); i++){
       eout << e_str[i][0] << " ";
