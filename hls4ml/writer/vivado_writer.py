@@ -679,7 +679,7 @@ class VivadoWriter_GNN(VivadoWriter):
             nonmodel_config_str = file.read()
 
         indent = "  "
-        model_config_str = f"PytorchModel: !!python/object:__main__.{config['PytorchModel'].__class__.__name__}"
+        model_config_str = f"PytorchModel: !!python/object:__main__.{model.config.config['PytorchModel'].__class__.__name__}"
 
         model_config_str += "\n" + indent + "_backward_hooks: !!python/object/apply:collections.OrderedDict"
         model_config_str += "\n" + indent + "- []"
