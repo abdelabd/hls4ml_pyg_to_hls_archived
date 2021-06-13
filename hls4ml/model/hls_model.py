@@ -539,3 +539,9 @@ class HLSModel(object):
             .format(reset=reset, csim=csim, synth=synth, cosim=cosim, validation=validation, export=export, vsynth=vsynth))
         os.chdir(curr_dir)
 
+class HLSModel_GNN(HLSModel):
+    def __init__(self, config, reader, layer_list):
+        super().__init__(config, reader, layer_list)
+                
+    def get_weights_data(self, module_name, layer_name, var_name):
+        return self.reader.get_weights_data(module_name, layer_name, var_name)
