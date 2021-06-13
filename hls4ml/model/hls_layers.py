@@ -1725,7 +1725,7 @@ class GarNetStack(GarNet):
 
         params['sublayer_configs'] = '\n'.join(sublayer_configs)
 
-        class EdgeBlock(Layer):
+class EdgeBlock(Layer):
     def initialize(self):
         assert (len(self.inputs) == 3)  # edge_features, node_features, edge_index
         assert (len(self.outputs) == 2)  # edge_predictions, aggregated node_predictions
