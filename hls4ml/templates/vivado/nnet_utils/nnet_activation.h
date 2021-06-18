@@ -454,7 +454,7 @@ void softmax(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in]){
     case softmax_implementation::legacy:
         softmax_legacy<data_T, res_T, CONFIG_T>(data, res);
         break;
-    }
+    }    
 }
 
 // *************************************************

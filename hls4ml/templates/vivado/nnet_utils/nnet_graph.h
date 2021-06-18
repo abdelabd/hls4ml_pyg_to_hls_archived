@@ -154,20 +154,20 @@ namespace nnet {
     nnet::vec_to_mat<data_T, data_T, typename CONFIG_T::Rn_config>(Rn_1D, Rn);
 
     // 3. edge_index
-    data_T edge_index[CONFIG_T::n_edge][2];
+    data_T edge_index[2][CONFIG_T::n_edge];
     nnet::vec_to_mat<data_T, data_T, typename CONFIG_T::edge_index_config>(edge_index_1D, edge_index);
 
     //output arrays
-    // 1. Q
+    // 1.L
+    res_T L[CONFIG_T::n_edge][CONFIG_T::n_out];
+
+    // 2. Q
     res_T Q[CONFIG_T::n_node][CONFIG_T::n_out];
     for(int i = 0; i < CONFIG_T::n_node; i++){
       for(int j = 0; j < CONFIG_T::n_out; j++){
 	    Q[i][j] = 0;
       }
     }
-
-    // 1.L
-    res_T L[CONFIG_T::n_edge][CONFIG_T::n_out];
 
     if(CONFIG_T::io_stream){
       #pragma HLS STREAM variable=edge_index

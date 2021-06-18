@@ -366,7 +366,6 @@ NodeBlock_config_template = """struct config{index}: nnet::graph_config{{
     static const bool activate_final = false;
 }};"""
 
-
 dense_function_template = 'nnet::dense<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
 batchnorm_function_template = 'nnet::normalize<{input_t}, {output_t}, {config}>({input}, {output}, {scale}, {bias});'
 conv1d_function_template = 'nnet::conv_1d_{data_format}<{input_t}, {output_t}, {config}>({input}, {output}, {w}, {b});'
@@ -445,10 +444,10 @@ class VivadoBackend(Backend):
         self.register_templates('Resize'                 , resize_function_template,      resize_config_template, resize_include_list)
         self.register_templates('Transpose'              , transpose_function_template,   transpose_config_template, transpose_include_list)
         self.register_templates('GarNet'                 , garnet_function_template,      garnet_config_template, garnet_include_list)
-        self.register_templates('GarNetStack'            , garnet_stack_function_template,garnet_stack_config_template, garnet_include_list)   
+        self.register_templates('GarNetStack'            , garnet_stack_function_template,garnet_stack_config_template, garnet_include_list)        
         self.register_templates('EdgeBlock'              , EdgeBlock_function_template, EdgeBlock_config_template, EdgeBlock_include_list)
         self.register_templates('NodeBlock'              , NodeBlock_function_template, NodeBlock_config_template, NodeBlock_include_list)
-    
+
     def get_valid_reuse_factors(self, layer):
         n_in = 0
         n_out = 0
