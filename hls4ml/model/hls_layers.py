@@ -343,6 +343,16 @@ class ExponentWeightVariable(WeightVariable):
 
     next = __next__
 
+var_map = {
+    'Variable':                 Variable,
+    'ArrayVariable':            ArrayVariable,
+    'StreamVariable':           StreamVariable,
+    'InplaceVariable':          InplaceVariable,
+    'WeightVariable':           WeightVariable,
+    'CompressedWeightVariable': CompressedWeightVariable,
+    'ExponentWeightVariable':   ExponentWeightVariable
+}
+
 class Layer(object):
     def __init__(self, model, name, attributes, inputs, outputs=None):
         self.model = model
@@ -399,6 +409,8 @@ class Layer(object):
         if output_name is None:
             output_name = self.outputs[0]
         return [node for node in self.model.graph.values() if node.inputs[0] == output_name]
+
+
 
     def get_output_variable(self, output_name=None):
         if output_name is not None:
@@ -554,12 +566,12 @@ class Input(Layer):
         shape = self.attributes['input_shape']
         if shape[0] is None:
             shape = shape[1:]
-            
+
         try:
             dims = self.attributes['dim_names']
         except KeyError:
             dims = ['N_INPUT_{}_{}'.format(i, self.index) for i in range(1, len(shape) + 1)]
-            
+
         if self.index == 1:
             default_type_name = 'input_t'
         else:
@@ -1731,6 +1743,7 @@ class GarNetStack(GarNet):
 
         params['sublayer_configs'] = '\n'.join(sublayer_configs)
 
+
 class EdgeBlock(Layer):
     def initialize(self):
         assert (len(self.inputs) == 3)  # edge_features, node_features, edge_index
@@ -2296,7 +2309,7 @@ class NodeBlock(Layer):
         configs['P_config'] = matrix_config_template.format(**P_params)
 
         return configs
-    
+
 layer_map = {
     'Input'                  : Input,
     'InputLayer'             : Input,

@@ -280,6 +280,7 @@ class HLSModel(object):
 
             self.graph[name] = self.make_node(kind, name, layer, inputs, outputs)
 
+
     def _optimize_model(self, optimizers):
         optimize_model(self, optimizers)
 
@@ -441,7 +442,7 @@ class HLSModel(object):
         x_size = np.prod(x.shape)
         n_samples, rem = divmod(x_size, expected_size)
         if rem != 0:
-            raise Exception('Input size mismatch, got {}, expected {}'.format(x_size.shape, self.get_input_variables()[0].shape))
+            raise Exception('Input size mismatch, got {}, expected {}, rem={}'.format(x_size, self.get_input_variables()[0].shape, rem))
 
         return n_samples
 
@@ -568,7 +569,7 @@ class HLSModel(object):
         os.chdir(curr_dir)
 
         return parse_vivado_report(self.config.get_output_dir())
-    
+
 class HLSModel_GNN(HLSModel):
     def __init__(self, config, reader, layer_list):
         super().__init__(config, reader, layer_list)
@@ -576,4 +577,13 @@ class HLSModel_GNN(HLSModel):
 
     def get_weights_data(self, module_name, layer_name, var_name):
         return self.reader.get_weights_data(module_name, layer_name, var_name)
+
+    def _get_top_function(self, N, E, edge_index):
+        raise NotImplementedError("not implemented yet")
+
+    def compute_n_samples(self, N, E, edge_index):
+        raise NotImplementedError("not implemented yet")
+
+    def predict(self, N, E, edge_index):
+        raise NotImplementedError("not implemented yet")
 
