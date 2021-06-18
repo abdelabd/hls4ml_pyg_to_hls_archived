@@ -553,7 +553,12 @@ class Input(Layer):
         shape = self.attributes['input_shape']
         if shape[0] is None:
             shape = shape[1:]
-        dims = ['N_INPUT_{}_{}'.format(i, self.index) for i in range(1, len(shape) + 1)]
+            
+        try:
+            dims = self.attributes['dim_names']
+        except KeyError:
+            dims = ['N_INPUT_{}_{}'.format(i, self.index) for i in range(1, len(shape) + 1)]
+            
         if self.index == 1:
             default_type_name = 'input_t'
         else:
@@ -1732,11 +1737,11 @@ class EdgeBlock(Layer):
 
         self.n_node = self.attributes['n_node']
         self.n_edge = self.attributes['n_edge']
-        self.n_features = self.attributes['n_features']
-        self.e_features = self.attributes['e_features']
-        self.n_edge_cppname, self.e_features_cppname = self.model.get_layer_output_variable('Re').dim_names
-        self.n_node_cppname, self.n_features_cppname = self.model.get_layer_output_variable('Rn').dim_names
-        self.out_features = self.attributes['out_features']
+        self.node_dim = self.attributes['node_dim']
+        self.edge_dim = self.attributes['edge_dim']
+        self.n_edge_cppname, self.edge_dim_cppname = self.model.get_layer_output_variable('edge_attr').dim_names
+        self.n_node_cppname, self.node_dim_cppname = self.model.get_layer_output_variable('node_attr').dim_names
+        self.out_dim = self.attributes['out_dim']
         self.torch_module = getattr(self.model.reader.torch_model, self.name)
 
         submodules = OrderedDict()
@@ -1749,14 +1754,14 @@ class EdgeBlock(Layer):
         self.submodules = submodules
 
         # edge predictions
-        L_shape = [self.n_edge, self.out_features]
-        L_dims = ['n_edge', f"layer{self.index}_out_features"]
+        L_shape = [self.n_edge, self.out_dim]
+        L_dims = ['N_EDGE', f"LAYER{self.index}_OUT_DIM"]
         L_name = f"layer{self.index}_out_L"
         self.add_output_variable(shape=L_shape, dim_names=L_dims, out_name=L_name, var_name=L_name)
 
-        # aggregated edge predictions (for use in NodeBlock)
-        Q_shape = [self.n_node, self.out_features]
-        Q_dims = ['n_node', f"layer{self.index}_out_features"]
+        # per-node-aggregated edge predictions
+        Q_shape = [self.n_node, self.out_dim]
+        Q_dims = ['N_NODE', f"LAYER{self.index}_OUT_DIM"]
         Q_name = f"layer{self.index}_out_Q"
         self.add_output_variable(shape=Q_shape, dim_names=Q_dims, out_name=Q_name, var_name=Q_name)
 
@@ -1768,12 +1773,12 @@ class EdgeBlock(Layer):
     def function_cpp(self):
         params = {}
         params['config'] = 'config{}'.format(self.index)
-        params['input_t'] = self.model.get_layer_output_variable('Re').type.name
+        params['input_t'] = self.model.get_layer_output_variable('edge_attr').type.name
         params['index_t'] = self.model.get_layer_output_variable('edge_index').type.name
         params['output_t'] = self.get_output_variable().type.name
-        params['Re'] = self.model.get_layer_output_variable('Re').cppname
-        params['Rn'] = self.model.get_layer_output_variable('Rn').cppname
-        params['edge_index'] = self.model.get_layer_output_variable('edge_index').cppname
+        params['edge_attr'] = self.attributes['inputs'][0]
+        params['node_attr'] = self.attributes['inputs'][1]
+        params['edge_index'] = self.attributes['inputs'][2]
         params['L'] = f"layer{self.index}_out_L"
         params['Q'] = f"layer{self.index}_out_Q"
 
@@ -1875,10 +1880,10 @@ class EdgeBlock(Layer):
         params['n_edge'] = self.n_edge_cppname
         params['n_in'] = 10
         params['n_hidden'] = 40
-        params['n_out'] = self.out_features
+        params['n_out'] = self.out_dim
         params['n_layers'] = 3
-        params['e_features'] = self.e_features_cppname
-        params['n_features'] = self.n_features_cppname
+        params['edge_dim'] = self.edge_dim_cppname
+        params['node_dim'] = self.node_dim_cppname
         params['io_type'] = 'io_parallel'
         params['reuse'] = 1
         params['n_zeros'] = 0
@@ -1904,7 +1909,8 @@ class EdgeBlock(Layer):
             else:
                 param_search = line.find('{')
                 if param_search == -1:
-                    out.append(line)
+                    if 'template' not in line:
+                        out.append(line)
 
         out = '\n'.join(out)
         out = out.format(**layer_params)
@@ -1915,31 +1921,109 @@ class EdgeBlock(Layer):
         relu_count = 0
         configs = OrderedDict()
 
-        submodules = OrderedDict()
-        try:
-            for name, module in self.torch_module.layers.named_modules():
-                submodules[name] = module
-        except AttributeError:
-            for name, module in self.torch_module.named_modules():
-                submodules[name] = module
-
-        for name, module in submodules.items():
+        for name, module in self.submodules.items():
             if name == '':
                 continue
 
             if isinstance(module, torch.nn.modules.linear.Linear):
                 linear_count += 1
-                layer_params = self.get_dense_params(module, linear_count)
-                layer_config = self.config_layer('Dense', layer_params)
-                configs[f"dense_config{linear_count}"] = layer_config
-                last_n_out = layer_params['n_out']
+                linear_params = self.get_dense_params(module, linear_count)
+                linear_config = self.config_layer('Dense', linear_params)
+                configs[f"dense_config{linear_count}"] = linear_config
+                last_n_out = linear_params['n_out']
 
             elif isinstance(module, torch.nn.modules.activation.ReLU):
                 relu_count += 1
-                layer_params = self.get_relu_params(relu_count, last_n_out)
-                layer_config = self.config_layer('Activation', layer_params)
-                configs[f"relu_config{relu_count}"] = layer_config
-                last_n_out = layer_params['n_in']
+                relu_params = self.get_relu_params(relu_count, last_n_out)
+                relu_config = self.config_layer('Activation', relu_params)
+                configs[f"relu_config{relu_count}"] = relu_config
+                last_n_out = relu_params['n_in']
+
+        # DUMMIES
+        if linear_count < 4:
+            for i in range(linear_count + 1, 5):
+                linear_config_i = linear_config.split('\n')
+                linear_config_i[0] = re.sub(f"dense_config{linear_count}", f"dense_config{i}", linear_config_i[0])
+                linear_config_i = "\n".join(linear_config_i)
+                configs[f"dense_config{i}"] = linear_config_i
+
+        if relu_count < 4:
+            for i in range(relu_count+1, 5):
+                relu_config_i = relu_config.split('\n')
+                relu_config_i[0] = re.sub(f"relu_config{relu_count}", f"relu_config{i}", relu_config_i[0])
+                relu_config_i = '\n'.join(relu_config_i)
+                configs[f"relu_config{i}"] = relu_config_i
+
+        # merge configs
+        concat_config_template = self.model.config.backend.get_config_template('Concatenate')
+        concat_config_template = re.sub('config{index}', 'merge_config{index}', concat_config_template)
+
+        merge_config1_params = {
+                    'index': 1,
+                    'n_elem1_0': 1,
+                    'n_elem1_1': self.edge_dim_cppname,
+                    'n_elem1_2': 0,
+                    'n_elem2_0': 1,
+                    'n_elem2_1': self.node_dim_cppname,
+                    'n_elem2_2': 0,
+                    'axis': 0
+                }
+        merge_config1 = concat_config_template.format(**merge_config1_params)
+        configs['merge_config1'] = merge_config1
+
+        merge_config2_params = {
+                    'index': 2,
+                    'n_elem1_0': 1,
+                    'n_elem1_1': f"{self.edge_dim_cppname}+{self.node_dim_cppname}",
+                    'n_elem1_2': 0,
+                    'n_elem2_0': 1,
+                    'n_elem2_1': self.node_dim_cppname,
+                    'n_elem2_2': 0,
+                    'axis': 0
+                }
+        merge_config2 = concat_config_template.format(**merge_config2_params)
+        configs['merge_config2'] = merge_config2
+
+        # mat_to_vec, vec_to_mat configs
+        matrix_config_template = """struct {matrix_name}_config: nnet::matrix_config{{
+            static const unsigned n_rows = {n_rows};
+            static const unsigned n_cols = {n_cols};
+        }};"""
+
+        Re_params = {
+            'matrix_name': 'Re',
+            'n_rows': self.n_edge_cppname,
+            'n_cols': self.edge_dim_cppname
+        }
+        configs['Re_config'] = matrix_config_template.format(**Re_params)
+
+        Rn_params = {
+            'matrix_name': 'Rn',
+            'n_rows': self.n_node_cppname,
+            'n_cols': self.node_dim_cppname
+        }
+        configs['Rn_config'] = matrix_config_template.format(**Rn_params)
+
+        edge_index_params = {
+            'matrix_name': 'edge_index',
+            'n_rows': 'TWO',
+            'n_cols': self.n_edge_cppname
+        }
+        configs['edge_index_config'] = matrix_config_template.format(**edge_index_params)
+
+        L_params = {
+            'matrix_name': 'L',
+            'n_rows': self.n_edge_cppname,
+            'n_cols': f"LAYER{self.index}_OUT_DIM"
+        }
+        configs['L_config'] = matrix_config_template.format(**L_params)
+
+        Q_params = {
+            'matrix_name': 'Q',
+            'n_rows': self.n_node_cppname,
+            'n_cols': f"LAYER{self.index}_OUT_DIM"
+        }
+        configs['Q_config'] = matrix_config_template.format(**Q_params)
 
         return configs
 
@@ -1951,11 +2035,11 @@ class NodeBlock(Layer):
 
         self.n_node = self.attributes['n_node']
         self.n_edge = self.attributes['n_edge']
-        self.n_features = self.attributes['n_features']
-        self.e_features = self.attributes['e_features']
-        self.out_features = self.attributes['out_features']
-        self.n_edge_cppname, self.e_features_cppname = self.model.get_layer_output_variable('Re').dim_names
-        self.n_node_cppname, self.n_features_cppname = self.model.get_layer_output_variable('Rn').dim_names
+        self.node_dim = self.attributes['node_dim']
+        self.edge_dim = self.attributes['edge_dim']
+        self.out_dim = self.attributes['out_dim']
+        self.n_edge_cppname, self.edge_dim_cppname = self.model.get_layer_output_variable('edge_attr').dim_names
+        self.n_node_cppname, self.node_dim_cppname = self.model.get_layer_output_variable('node_attr').dim_names
         self.torch_module = getattr(self.model.reader.torch_model, self.name)
 
         submodules = OrderedDict()
@@ -1969,8 +2053,8 @@ class NodeBlock(Layer):
 
 
         # node predictions
-        P_shape = [self.n_node, self.out_features]
-        P_dims = ['n_node', f"layer{self.index}_out_features"]
+        P_shape = [self.n_node, self.out_dim]
+        P_dims = ['N_NODE', f"LAYER{self.index}_OUT_DIM"]
         P_name = f"layer{self.index}_out_P"
         self.add_output_variable(shape=P_shape, dim_names=P_dims, out_name=P_name, var_name=P_name)
 
@@ -1978,15 +2062,15 @@ class NodeBlock(Layer):
                          compression=self.model.config.get_compression(self))
         self.add_bias(quantizer=self.get_attr('weight_quantizer'))
 
-        self.n_edge_cppname, self.e_features_cppname = self.model.get_layer_output_variable('Re').dim_names
-        self.n_node_cppname, self.n_features_cppname = self.model.get_layer_output_variable('Rn').dim_names
+        self.n_edge_cppname, self.edge_dim_cppname = self.model.get_layer_output_variable('edge_attr').dim_names
+        self.n_node_cppname, self.node_dim_cppname = self.model.get_layer_output_variable('node_attr').dim_names
 
     def function_cpp(self):
         params = {}
         params['config'] = 'config{}'.format(self.index)
-        params['input_t'] = self.model.get_layer_output_variable('Rn').type.name
+        params['input_t'] = self.model.get_layer_output_variable('node_attr').type.name
         params['output_t'] = self.get_output_variable().type.name
-        params['Rn'] = self.model.get_layer_output_variable('Rn').cppname
+        params['node_attr'] = self.model.get_layer_output_variable('node_attr').cppname
         params['Q'] = self.model.get_layer_output_variable(f'layer{self.index-1}_out_Q').cppname
         params['P'] = f"layer{self.index}_out_P"
 
@@ -2088,10 +2172,10 @@ class NodeBlock(Layer):
         params['n_edge'] = self.n_edge_cppname
         params['n_in'] = 10
         params['n_hidden'] = 40
-        params['n_out'] = self.out_features
+        params['n_out'] = self.out_dim
         params['n_layers'] = 3
-        params['e_features'] = self.e_features_cppname
-        params['n_features'] = self.n_features_cppname
+        params['edge_dim'] = self.edge_dim_cppname
+        params['node_dim'] = self.node_dim_cppname
         params['io_type'] = 'io_parallel'
         params['reuse'] = 1
         params['n_zeros'] = 0
@@ -2122,7 +2206,8 @@ class NodeBlock(Layer):
             else:
                 param_search = line.find('{')
                 if param_search == -1:
-                    out.append(line)
+                    if 'template' not in line:
+                        out.append(line)
 
         out = '\n'.join(out)
         out = out.format(**layer_params)
@@ -2133,31 +2218,81 @@ class NodeBlock(Layer):
         relu_count = 0
         configs = OrderedDict()
 
-        submodules = OrderedDict()
-        try:
-            for name, module in self.torch_module.layers.named_modules():
-                submodules[name] = module
-        except AttributeError:
-            for name, module in self.torch_module.named_modules():
-                submodules[name] = module
-
-        for name, module in submodules.items():
+        for name, module in self.submodules.items():
             if name == '':
                 continue
 
             if isinstance(module, torch.nn.modules.linear.Linear):
                 linear_count += 1
-                layer_params = self.get_dense_params(module, linear_count)
-                layer_config = self.config_layer('Dense', layer_params)
-                configs[f"dense_config{linear_count}"] = layer_config
-                last_n_out = layer_params['n_out']
+                linear_params = self.get_dense_params(module, linear_count)
+                linear_config = self.config_layer('Dense', linear_params)
+                configs[f"dense_config{linear_count}"] = linear_config
+                last_n_out = linear_params['n_out']
 
             elif isinstance(module, torch.nn.modules.activation.ReLU):
                 relu_count += 1
-                layer_params = self.get_relu_params(relu_count, last_n_out)
-                layer_config = self.config_layer('Activation', layer_params)
-                configs[f"relu_config{relu_count}"] = layer_config
-                last_n_out = layer_params['n_in']
+                relu_params = self.get_relu_params(relu_count, last_n_out)
+                relu_config = self.config_layer('Activation', relu_params)
+                configs[f"relu_config{relu_count}"] = relu_config
+                last_n_out = relu_params['n_in']
+
+        # DUMMIES
+        if linear_count < 4:
+            for i in range(linear_count+1, 5):
+                linear_config_i = linear_config.split('\n')
+                linear_config_i[0] = re.sub(f"dense_config{linear_count}", f"dense_config{i}", linear_config_i[0])
+                linear_config_i = "\n".join(linear_config_i)
+                configs[f"dense_config{i}"] = linear_config_i
+
+        if relu_count < 4:
+            for i in range(relu_count+1, 5):
+                relu_config_i = relu_config.split('\n')
+                relu_config_i[0] = re.sub(f"relu_config{relu_count}", f"relu_config{i}", relu_config_i[0])
+                relu_config_i = '\n'.join(relu_config_i)
+                configs[f"relu_config{i}"] = relu_config_i
+
+        # merge configs
+        concat_config_template = self.model.config.backend.get_config_template('Concatenate')
+        concat_config_template = re.sub('config{index}', 'merge_config{index}', concat_config_template)
+        merge_config1_params = {
+            'index': 1,
+            'n_elem1_0': 1,
+            'n_elem1_1': self.edge_dim_cppname,
+            'n_elem1_2': 0,
+            'n_elem2_0': 1,
+            'n_elem2_1': self.node_dim_cppname,
+            'n_elem2_2': 0,
+            'axis': 0
+        }
+        merge_config1 = concat_config_template.format(**merge_config1_params)
+        configs['merge_config1'] = merge_config1
+
+        # mat_to_vec, vec_to_mat configs
+        matrix_config_template = """struct {matrix_name}_config: nnet::matrix_config{{
+                    static const unsigned n_rows = {n_rows};
+                    static const unsigned n_cols = {n_cols};
+                }};"""
+
+        Rn_params = {
+            'matrix_name': 'Rn',
+            'n_rows': self.n_node_cppname,
+            'n_cols': self.node_dim_cppname
+        }
+        configs['Rn_config'] = matrix_config_template.format(**Rn_params)
+
+        Q_params = {
+            'matrix_name': 'Q',
+            'n_rows': self.n_node_cppname,
+            'n_cols': f"LAYER{self.index-1}_OUT_DIM"
+        }
+        configs['Q_config'] = matrix_config_template.format(**Q_params)
+
+        P_params = {
+            'matrix_name': 'P',
+            'n_rows': self.n_node_cppname,
+            'n_cols': f"LAYER{self.index}_OUT_DIM"
+        }
+        configs['P_config'] = matrix_config_template.format(**P_params)
 
         return configs
     
