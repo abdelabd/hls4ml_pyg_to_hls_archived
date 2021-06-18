@@ -5,6 +5,7 @@ import sys
 import re
 import numpy as np
 from collections import OrderedDict
+import torch
 
 class Quantizer(object):
     def __init__(self, bits, hls_type):
