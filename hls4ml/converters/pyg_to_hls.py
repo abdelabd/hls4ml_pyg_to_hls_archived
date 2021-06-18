@@ -2,7 +2,7 @@ from __future__ import print_function
 
 class PygModelReader(object):
 
-        def __init__(self, config):
+    def __init__(self, config):
         self.torch_model = config['PytorchModel']
         self.state_dict = self.torch_model.state_dict()
         self.n_node = config['n_node']
