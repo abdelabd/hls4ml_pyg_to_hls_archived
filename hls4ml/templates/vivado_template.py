@@ -339,11 +339,11 @@ EdgeBlock_config_template = """struct config{index}: nnet::graph_config{{
     static const unsigned n_hidden = {n_hidden};
     static const unsigned n_out = {n_out};
     static const unsigned n_layers = {n_layers};
-    static const unsigned e_features = {e_features};
-    static const unsigned n_features = {n_features}; //n for NODE, not NUMBER
+    static const unsigned e_features = {edge_dim};
+    static const unsigned n_features = {node_dim}; 
     static const unsigned io_type = nnet::{io_type};
     static const unsigned reuse_factor = {reuse};
-    static const unsigned n_zeros = {n_zeros}
+    static const unsigned n_zeros = {n_zeros};
     static const bool io_stream = false; 
     static const bool activate_final = false;
 }};"""
@@ -357,11 +357,11 @@ NodeBlock_config_template = """struct config{index}: nnet::graph_config{{
     static const unsigned n_hidden = {n_hidden};
     static const unsigned n_out = {n_out};
     static const unsigned n_layers = {n_layers};
-    static const unsigned e_features = {e_features};
-    static const unsigned n_features = {n_features}; //n for NODE, not NUMBER
+    static const unsigned e_features = {edge_dim};
+    static const unsigned n_features = {node_dim}; 
     static const unsigned io_type = nnet::{io_type};
     static const unsigned reuse_factor = {reuse};
-    static const unsigned n_zeros = {n_zeros}
+    static const unsigned n_zeros = {n_zeros};
     static const bool io_stream = false; 
     static const bool activate_final = false;
 }};"""
@@ -387,8 +387,8 @@ resize_function_template = 'nnet::resize_{algorithm}<{input_t}, {config}>({input
 transpose_function_template = 'nnet::transpose{dim}<{input_t}, {config}>({input}, {output});'
 garnet_function_template = 'nnet::garnet{impl}<{input_t}, {integer_input_t}, {output_t}, {config}>({input}, {nvtx}, {output});'
 garnet_stack_function_template = 'nnet::garnet_stack<{input_t}, {integer_input_t}, {output_t}, {config}>({input}, {nvtx}, {output});'
-EdgeBlock_function_template = 'nnet::IN_edge_module<{input_t}, {index_t}, {output_t}, {config}>({Re}, {Rn}, {edge_index}, {L}, {Q}, {w0}, {b0}, {w1}, {b1}, {w2}, {b2}, {w3}, {b3})'
-NodeBlock_function_template = 'nnet::IN_node_module<{input_t}, {output_t}, {config}>({Rn}, {Q}, {P}, {w0}, {b0}, {w1}, {b1}, {w2}, {b2}, {w3}, {b3})'
+EdgeBlock_function_template = 'nnet::IN_edge_module<{input_t}, {index_t}, {output_t}, {config}>({edge_attr}, {node_attr}, {edge_index}, {L}, {Q}, {w0}, {b0}, {w1}, {b1}, {w2}, {b2}, {w3}, {b3});'
+NodeBlock_function_template = 'nnet::IN_node_module<{input_t}, {output_t}, {config}>({node_attr}, {Q}, {P}, {w0}, {b0}, {w1}, {b1}, {w2}, {b2}, {w3}, {b3});'
 
 dense_include_list = ['nnet_utils/nnet_dense.h', 'nnet_utils/nnet_dense_compressed.h', 'nnet_utils/nnet_dense_stream.h']
 batchnorm_include_list = ['nnet_utils/nnet_batchnorm.h', 'nnet_utils/nnet_batchnorm_stream.h']
@@ -405,14 +405,18 @@ transpose_include_list = ['nnet_utils/nnet_array.h']
 garnet_include_list = ['nnet_utils/nnet_garnet.h']
 EdgeBlock_include_list = ['nnet_utils/nnet_common.h',
                           'nnet_utils/nnet_dense.h',
-                          'nnet_utils/nnet_dense_large.h',
+                          'nnet_utils/nnet_dense_resource.h',
                           'nnet_utils/nnet_activation.h',
-                          'nnet_utils/nnet_graph.h']
+                          'nnet_utils/nnet_graph.h',
+                          'nnet_utils/nnet_merge.h',
+                          'nnet_utils/nnet_array.h']
 NodeBlock_include_list = ['nnet_utils/nnet_common.h',
                           'nnet_utils/nnet_dense.h',
-                          'nnet_utils/nnet_dense_large.h',
+                          'nnet_utils/nnet_dense_resource.h',
                           'nnet_utils/nnet_activation.h',
-                          'nnet_utils/nnet_graph.h']
+                          'nnet_utils/nnet_graph.h',
+                          'nnet_utils/nnet_merge.h',
+                          'nnet_utils/nnet_array.h']
 
 class VivadoBackend(Backend):
     def __init__(self):
