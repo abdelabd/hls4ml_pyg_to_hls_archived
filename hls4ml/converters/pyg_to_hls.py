@@ -2,16 +2,16 @@ from __future__ import print_function
 
 class PygModelReader(object):
 
-    def __init__(self, config):
+        def __init__(self, config):
         self.torch_model = config['PytorchModel']
         self.state_dict = self.torch_model.state_dict()
-        self.n_node = config['n_nodes']
-        self.n_edge = config['n_edges']
-        self.n_features = config['node_dim']
-        self.e_features = config['edge_dim']
+        self.n_node = config['n_node']
+        self.n_edge = config['n_edge']
+        self.node_dim = config['node_dim']
+        self.edge_dim= config['edge_dim']
         self.input_shapes = {
-            'EdgeAttr': [self.n_edge, self.e_features],
-            'NodeAttr': [self.n_node, self.n_features],
+            'EdgeAttr': [self.n_edge, self.edge_dim],
+            'NodeAttr': [self.n_node, self.node_dim],
             'EdgeIndex': [2, self.n_edge]
         }
 
