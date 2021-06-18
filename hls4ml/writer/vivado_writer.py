@@ -294,6 +294,8 @@ class VivadoWriter(Writer):
                 newline = line
                 numbers = OrderedDict.fromkeys([layer.get_numbers_cpp() for layer in model.get_layers()])
                 newline += ''.join(numbers)
+                newline = '\n'.join(set(newline.split('\n')))
+                newline += '\n'
 
             elif '//hls-fpga-machine-learning insert layer-precision' in line:
                 newline = line
@@ -654,7 +656,8 @@ class VivadoWriter(Writer):
         self.write_yml(model)
         self.write_tar(model)
         print('Done')
- 
+
+
 class VivadoWriter_GNN(VivadoWriter):
 
     def write_yml(self, model):
@@ -737,4 +740,3 @@ class VivadoWriter_GNN(VivadoWriter):
 
         os.remove(model.config.get_output_dir() + "/submodule_config.yml")
         os.remove(model.config.get_output_dir() + "/nonmodel_config.yml")
-
