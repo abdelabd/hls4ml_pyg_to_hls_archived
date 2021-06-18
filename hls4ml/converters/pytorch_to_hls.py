@@ -132,14 +132,19 @@ def pytorch_to_hls(config):
     
     #All supported layers
     supported_layers = get_supported_pytorch_layers() + skip_layers
-    
-    #Map inputs of skipped and split (activation) layers
-    inputs_map = {}
+    #
+    print('Supported layers')
+    print(supported_layers)
 
-    input_layers = None
-    output_layers = None
+    print('Input Shapes')
+    print(input_shapes)
+    #Map inputs of skipped and split (activation) layers
+    #inputs_map = {}
+
+    #input_layers = None
+    #output_layers = None
     
-    layer_config = None
+    #layer_config = None
     
     #Output shape tracking
     output_shapes = {}
@@ -203,4 +208,4 @@ def pytorch_to_hls(config):
     
     print('Creating HLS model')
     hls_model = HLSModel(config, reader, layer_list)
-    return hls_model
+    return layer_list, hls_model
