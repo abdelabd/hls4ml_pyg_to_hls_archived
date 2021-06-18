@@ -704,7 +704,7 @@ class VivadoWriter_GNN(VivadoWriter):
         model_config_str += "\n" + indent + "_state_dict_hooks: !!python/object/apply:collections.OrderedDict"
         model_config_str += "\n" + indent + "- []"
 
-        model_config_str += "\n" + indent + f"input_shape: {[model.reader.n_edge, model.reader.e_features], [model.reader.n_node, model.reader.n_features], [2, model.reader.n_edge]}"
+        model_config_str += "\n" + indent + f"input_shape: {[model.reader.n_edge, model.reader.edge_dim], [model.reader.n_node, model.reader.node_dim], [2, model.reader.n_edge]}"
         model_config_str += "\n" + indent + "quantized_model: false"
         model_config_str += "\n" + indent + "training: true"
         model_config_str += "\n" + indent + "_modules: !!python/object/apply:collections.OrderedDict"
@@ -737,3 +737,4 @@ class VivadoWriter_GNN(VivadoWriter):
 
         os.remove(model.config.get_output_dir() + "/submodule_config.yml")
         os.remove(model.config.get_output_dir() + "/nonmodel_config.yml")
+
