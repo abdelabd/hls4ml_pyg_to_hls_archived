@@ -1,10 +1,10 @@
 from __future__ import print_function
+from hls4ml.converters.pytorch_to_hls import PyTorchModelReader
 
-class PygModelReader(object):
+class PygModelReader(PyTorchModelReader):
 
     def __init__(self, config):
-        self.torch_model = config['PytorchModel']
-        self.state_dict = self.torch_model.state_dict()
+        super().__init__(self, config)
         self.n_node = config['n_node']
         self.n_edge = config['n_edge']
         self.node_dim = config['node_dim']
