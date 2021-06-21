@@ -154,8 +154,8 @@ namespace nnet {
     nnet::vec_to_mat<data_T, data_T, typename CONFIG_T::Rn_config>(Rn_1D, Rn);
 
     // 3. edge_index
-    data_T edge_index[2][CONFIG_T::n_edge];
-    nnet::vec_to_mat<data_T, data_T, typename CONFIG_T::edge_index_config>(edge_index_1D, edge_index);
+    index_T edge_index[2][CONFIG_T::n_edge];
+    nnet::vec_to_mat<index_T, index_T, typename CONFIG_T::edge_index_config>(edge_index_1D, edge_index);
 
     //output arrays
     // 1.L
@@ -176,15 +176,16 @@ namespace nnet {
     #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
     IN_edge_loop: for(int i = 0; i < CONFIG_T::n_edge; i++) {
       #pragma HLS UNROLL
-      index_T r = edge_index[i][0];
-      index_T s = edge_index[i][1];
-      data_T l_logits[CONFIG_T::e_features+CONFIG_T::n_features];
+      index_T r = edge_index[1][i]; // 'x_i'
+      index_T s = edge_index[0][i]; // 'x_j'
+
+      //
+      data_T l_logits[2*CONFIG_T::n_features];
       #pragma HLS ARRAY_PARTITION variable=l_logits complete dim=0
-      
-      nnet::concatenate1d<data_T, data_T, data_T, typename CONFIG_T::merge_config1>(Re[i], Rn[r], l_logits);
+      nnet::concatenate1d<data_T, data_T, data_T, typename CONFIG_T::merge_config1>(Rn[r], Rn[s], l_logits);
       data_T l[CONFIG_T::e_features + 2*CONFIG_T::n_features];
       #pragma HLS ARRAY_PARTITION variable=l complete dim=0
-      nnet::concatenate1d<data_T, data_T, data_T, typename CONFIG_T::merge_config2>(l_logits, Rn[s], l);
+      nnet::concatenate1d<data_T, data_T, data_T, typename CONFIG_T::merge_config2>(l_logits, Re[i], l);
 
       if(CONFIG_T::activate_final){
 	data_T L_logits[CONFIG_T::n_out];
@@ -261,7 +262,7 @@ namespace nnet {
       #pragma HLS UNROLL
       data_T p[CONFIG_T::e_features + CONFIG_T::n_features];
       #pragma HLS ARRAY_PARTITION variable=p complete dim=0
-      nnet::concatenate1d<data_T, data_T, data_T, typename CONFIG_T::merge_config1>(Q[i], Rn[i], p);
+      nnet::concatenate1d<data_T, data_T, data_T, typename CONFIG_T::merge_config1>(Rn[i], Q[i], p);
 
       if(CONFIG_T::activate_final){
 	data_T P_logits[CONFIG_T::n_out];
