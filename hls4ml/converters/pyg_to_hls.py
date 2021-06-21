@@ -4,16 +4,11 @@ from hls4ml.converters.pytorch_to_hls import PyTorchModelReader
 class PygModelReader(PyTorchModelReader):
 
     def __init__(self, config):
-        super().__init__(self, config)
+        super().__init__(config)
         self.n_node = config['n_node']
         self.n_edge = config['n_edge']
         self.node_dim = config['node_dim']
         self.edge_dim= config['edge_dim']
-        self.input_shapes = {
-            'EdgeAttr': [self.n_edge, self.edge_dim],
-            'NodeAttr': [self.n_node, self.node_dim],
-            'EdgeIndex': [2, self.n_edge]
-        }
 
     def get_weights_data(self, module_name, layer_name, var_name):
         data = None
