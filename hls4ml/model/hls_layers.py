@@ -1974,11 +1974,11 @@ class EdgeBlock(Layer):
 
         merge_config1_params = {
                     'index': 1,
-                    'n_elem1_0': 1,
-                    'n_elem1_1': self.edge_dim_cppname,
+                    'n_elem1_0': self.node_dim_cppname,
+                    'n_elem1_1': 1,
                     'n_elem1_2': 0,
-                    'n_elem2_0': 1,
-                    'n_elem2_1': self.node_dim_cppname,
+                    'n_elem2_0': self.node_dim_cppname,
+                    'n_elem2_1': 1,
                     'n_elem2_2': 0,
                     'axis': 0
                 }
@@ -1987,11 +1987,11 @@ class EdgeBlock(Layer):
 
         merge_config2_params = {
                     'index': 2,
-                    'n_elem1_0': 1,
-                    'n_elem1_1': f"{self.edge_dim_cppname}+{self.node_dim_cppname}",
+                    'n_elem1_0': f"2*{self.node_dim_cppname}",
+                    'n_elem1_1': 1,
                     'n_elem1_2': 0,
-                    'n_elem2_0': 1,
-                    'n_elem2_1': self.node_dim_cppname,
+                    'n_elem2_0': self.edge_dim_cppname,
+                    'n_elem2_1': 1,
                     'n_elem2_2': 0,
                     'axis': 0
                 }
@@ -2270,11 +2270,11 @@ class NodeBlock(Layer):
         concat_config_template = re.sub('config{index}', 'merge_config{index}', concat_config_template)
         merge_config1_params = {
             'index': 1,
-            'n_elem1_0': 1,
-            'n_elem1_1': self.edge_dim_cppname,
+            'n_elem1_0': self.node_dim_cppname,
+            'n_elem1_1': 1,
             'n_elem1_2': 0,
-            'n_elem2_0': 1,
-            'n_elem2_1': self.node_dim_cppname,
+            'n_elem2_0': self.edge_dim_cppname,
+            'n_elem2_1': 1,
             'n_elem2_2': 0,
             'axis': 0
         }
