@@ -146,18 +146,6 @@ namespace nnet {
 			typename CONFIG_T::dense_config4::bias_t    core_edge_b3[CONFIG_T::dense_config4::n_out])
 
   {
-    std::ostringstream log_file_name;
-    log_file_name << "EdgeBlock_dim" << CONFIG_T::n_out << "_log.txt";
-    std::string fname = log_file_name.str();
-    std::ofstream EB_log;
-    EB_log.open(fname);
-
-    std::ostringstream l_save_file_name;
-    l_save_file_name << "lvectors_dim" << CONFIG_T::n_out << ".csv";
-    std::string lfname = l_save_file_name.str();
-    std::ofstream l_save;
-    l_save.open(lfname);
-
     //input vectors --> input arrays
     // 1. Re
     data_T Re[CONFIG_T::n_edge][CONFIG_T::e_features];
@@ -193,27 +181,12 @@ namespace nnet {
       index_T r = edge_index[1][i]; // 'x_i'
       index_T s = edge_index[0][i]; // 'x_j'
 
-      EB_log << "edge index: " << i << std::endl;
-      EB_log << "edge attributes: " << Re[i][0] << "," << Re[i][1] << "," << Re[i][2] << "," << Re[i][3] << std::endl;
-      EB_log << "receiver index: " << r << std::endl;
-      EB_log << "receiver attributes: " << Rn[r][0] << "," << Rn[r][1] << "," << Rn[r][2] << std::endl;
-      EB_log << "sender index: " << s << std::endl;
-      EB_log << "sender attributes: " << Rn[s][0] << "," << Rn[s][1] << "," << Rn[s][2]  << std::endl;
-
-      //
       data_T l_logits[2*CONFIG_T::n_features];
       #pragma HLS ARRAY_PARTITION variable=l_logits complete dim=0
       nnet::concatenate1d<data_T, data_T, data_T, typename CONFIG_T::merge_config1>(Rn[r], Rn[s], l_logits);
       data_T l[CONFIG_T::e_features + 2*CONFIG_T::n_features];
       #pragma HLS ARRAY_PARTITION variable=l complete dim=0
       nnet::concatenate1d<data_T, data_T, data_T, typename CONFIG_T::merge_config2>(l_logits, Re[i], l);
-
-      EB_log << "first concatenation ('l_logits'): " << l_logits[0] << "," << l_logits[1] << "," << l_logits[2] << "," << l_logits[3] << "," << l_logits[4] << "," << l_logits[5] << std::endl;
-      EB_log << "full concatenation ('l'): "<< l[0] << "," << l[1] << "," << l[2] << "," << l[3] << "," << l[4] << "," << l[5] << "," << l[6] << "," << l[7] << "," << l[8] << "," << l[9] << std::endl;
-      EB_log << "" << std::endl;
-
-      //l_save << "edge index: " << i << std::endl;
-      l_save << l[0] << "," << l[1] << "," << l[2] << "," << l[3] << "," << l[4] << "," << l[5] << "," << l[6] << "," << l[7] << "," << l[8] << "," << l[9] << std::endl;
 
       if(CONFIG_T::activate_final){
 	data_T L_logits[CONFIG_T::n_out];

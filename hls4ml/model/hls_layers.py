@@ -1830,7 +1830,7 @@ class EdgeBlock(Layer):
 
         for name, module in self.submodules.items():
             if module.__class__.__name__ == 'Linear':
-                data = self.model.get_weights_data(self.name, name, 'kernel')
+                data = self.model.get_weights_data(self.name, name, 'kernel').transpose()
                 var_name = f"{self.name}_w{linear_count}"
                 self.add_weights_variable(name=var_name, var_name=var_name, data=data, quantizer=quantizer,
                                               compression=compression)
@@ -2122,7 +2122,7 @@ class NodeBlock(Layer):
 
         for name, module in self.submodules.items():
             if module.__class__.__name__ == 'Linear':
-                data = self.model.get_weights_data(self.name, name, 'kernel')
+                data = self.model.get_weights_data(self.name, name, 'kernel').transpose()
                 var_name = f"{self.name}_w{linear_count}"
                 self.add_weights_variable(name=var_name, var_name=var_name, data=data, quantizer=quantizer,
                                               compression=compression)
