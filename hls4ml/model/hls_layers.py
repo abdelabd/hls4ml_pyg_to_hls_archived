@@ -343,16 +343,6 @@ class ExponentWeightVariable(WeightVariable):
 
     next = __next__
 
-var_map = {
-    'Variable':                 Variable,
-    'ArrayVariable':            ArrayVariable,
-    'StreamVariable':           StreamVariable,
-    'InplaceVariable':          InplaceVariable,
-    'WeightVariable':           WeightVariable,
-    'CompressedWeightVariable': CompressedWeightVariable,
-    'ExponentWeightVariable':   ExponentWeightVariable
-}
-
 class Layer(object):
     def __init__(self, model, name, attributes, inputs, outputs=None):
         self.model = model
@@ -409,8 +399,6 @@ class Layer(object):
         if output_name is None:
             output_name = self.outputs[0]
         return [node for node in self.model.graph.values() if node.inputs[0] == output_name]
-
-
 
     def get_output_variable(self, output_name=None):
         if output_name is not None:
@@ -1742,7 +1730,6 @@ class GarNetStack(GarNet):
             sublayer_configs.append(sublayer_template.format(**sub_params))
 
         params['sublayer_configs'] = '\n'.join(sublayer_configs)
-
 
 class EdgeBlock(Layer):
     def initialize(self):

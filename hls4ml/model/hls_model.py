@@ -442,7 +442,7 @@ class HLSModel(object):
         x_size = np.prod(x.shape)
         n_samples, rem = divmod(x_size, expected_size)
         if rem != 0:
-            raise Exception('Input size mismatch, got {}, expected {}, rem={}'.format(x_size, self.get_input_variables()[0].shape, rem))
+            raise Exception('Input size mismatch, got {}, expected {}'.format(x_size.shape, self.get_input_variables()[0].shape))
 
         return n_samples
 
