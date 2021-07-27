@@ -643,7 +643,10 @@ class Dense(Layer):
         params['nonzeros'] = self.get_weights('weight').nonzeros
         params['product_type'] = self.model.config.backend.product_type(self.get_input_variable().type.precision, self.get_weights('weight').type.precision)
         params['strategy'] = self.get_attr('strategy')
-        params['remove_pipeline_pragma'] = self.get_attr('remove_pipeline_pragma')
+        if self.get_attr('remove_pipeline_pragma') is not None:
+            params['remove_pipeline_pragma'] = self.get_attr('remove_pipeline_pragma')
+        else:
+            params['remove_pipeline_pragma'] = "false"
 
         return self._config_template.format(**params)
 
