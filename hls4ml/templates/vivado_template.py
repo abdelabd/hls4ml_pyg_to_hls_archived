@@ -19,6 +19,7 @@ dense_config_template = """struct config{index} : nnet::dense_config {{
     typedef {bias_t} bias_t;
     typedef {weight_t} weight_t;
     typedef {index_t} index_t;
+    static const bool remove_pipeline_pragma = {remove_pipeline_pragma};
     template<class x_T, class y_T, class res_T>
     using product = nnet::product::{product_type}<x_T, y_T, res_T>;
 }};\n"""

@@ -643,6 +643,7 @@ class Dense(Layer):
         params['nonzeros'] = self.get_weights('weight').nonzeros
         params['product_type'] = self.model.config.backend.product_type(self.get_input_variable().type.precision, self.get_weights('weight').type.precision)
         params['strategy'] = self.get_attr('strategy')
+        params['remove_pipeline_pragma'] = self.get_attr('remove_pipeline_pragma')
 
         return self._config_template.format(**params)
 
@@ -1707,7 +1708,7 @@ class GarNet(Layer):
             ('edge_weight', FixedPrecisionType(10, 0, signed=False)),
             ('edge_weight_aggr', FixedPrecisionType(ew_aggr_w, ew_aggr_intw, signed=False)),
             ('aggr', FixedPrecisionType(aggr_w, aggr_intw)),
-            ('norm', FixedPrecisionType(norm_w, norm_intw, signed=False))
+            ('norm', FixedPrecisionType(norm_w, norm_intw, signed=False)),
         ]
         for vname, default_precision in vspecs:
             params['{}_t'.format(vname)], type_name = self.model.config.get_precision(self, var=vname)
@@ -1860,6 +1861,7 @@ class GraphBlock(Layer): #parent class for EdgeBlock, NodeBlock
         params['iotype'] = 'io_parallel'
         params['reuse'] = 1
         params['nzeros'] = 0
+        params['remove_pipeline_pragma'] = 'true'
 
         params['accum_t'] = self.fp_cpp
         params['bias_t'] = self.fp_cpp
@@ -2056,7 +2058,7 @@ class EdgeBlock(GraphBlock):
         params['out_dim'] = self.out_dim
         params['n_layers'] = self.attributes["n_layers"]
         params['io_type'] = 'io_parallel'
-        params['reuse'] = 1
+        params['reuse'] = self.reuse_factor
         params['n_zeros'] = 0
         params['fp_int_bits'] = self.fp_type.integer
 
@@ -2255,7 +2257,7 @@ class NodeBlock(GraphBlock):
         params['out_dim'] = self.out_dim
         params['n_layers'] = self.attributes["n_layers"]
         params['io_type'] = 'io_parallel'
-        params['reuse'] = 1
+        params['reuse'] = self.reuse_factor
         params['n_zeros'] = 0
         return params
 
