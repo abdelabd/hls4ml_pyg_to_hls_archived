@@ -188,23 +188,6 @@ void  sigmoid(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
     }
 }
 
-template<class data_T, class res_T, typename CONFIG_T>
-void  sigmoid_batch(data_T data[CONFIG_T::n_batch][CONFIG_T::n_in], res_T res[CONFIG_T::n_batch][CONFIG_T::n_in])
-{
-  data_T data_temp[CONFIG_T::n_in];
-  res_T res_temp[CONFIG_T::n_in];
-  #pragma HLS PIPELINE
-  for (int bb=0; bb<CONFIG_T::n_batch; bb++) {
-    for (int ii=0; ii<CONFIG_T::n_in; ii++) {
-      data_temp[ii] = data[bb][ii];
-    }
-    sigmoid<data_T, res_T, CONFIG_T>(data_temp, res_temp);
-    for (int ii=0; ii<CONFIG_T::n_in; ii++) {
-      res[bb][ii] = res_temp[ii];
-    }
-  }
-}
-
 // *************************************************
 //       Softmax Activation
 // *************************************************
@@ -509,23 +492,6 @@ void  tanh(data_T data[CONFIG_T::n_in], res_T res[CONFIG_T::n_in])
         if (index > CONFIG_T::table_size-1) index = CONFIG_T::table_size-1;
         res[ii] = (res_T) tanh_table[index];
     }
-}
-
-template<class data_T, class res_T, typename CONFIG_T>
-void  tanh_batch(data_T data[CONFIG_T::n_batch][CONFIG_T::n_in], res_T res[CONFIG_T::n_batch][CONFIG_T::n_in])
-{
-  data_T data_temp[CONFIG_T::n_in];
-  res_T res_temp[CONFIG_T::n_in];
-  #pragma HLS PIPELINE
-  for (int bb=0; bb<CONFIG_T::n_batch; bb++) {
-    for (int ii=0; ii<CONFIG_T::n_in; ii++) {
-      data_temp[ii] = data[bb][ii];
-    }
-    tanh<data_T, res_T, CONFIG_T>(data_temp, res_temp);
-    for (int ii=0; ii<CONFIG_T::n_in; ii++) {
-      res[bb][ii] = res_temp[ii];
-    }
-  }
 }
 
 // *************************************************

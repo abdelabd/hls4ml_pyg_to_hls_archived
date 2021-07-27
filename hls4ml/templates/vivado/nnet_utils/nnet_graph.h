@@ -7,9 +7,6 @@
 #include "nnet_dense_resource.h"
 #include "nnet_activation.h"
 #include "nnet_array.h"
-#include "hls_stream.h"
-#include <string>
-#include <sstream>
 #include <math.h>
 
 namespace nnet {
@@ -548,33 +545,6 @@ template<class data_T, class res_T>
     // output array --> output vector
     nnet::mat_to_vec<res_T, res_T, typename CONFIG_T::node_update_config>(node_update, node_update_1D);
 
-  }
-
-  template<class data_T, class res_T, typename CONFIG_T>
-    void graph_independent(
-			   data_T    X[CONFIG_T::dense_config1::n_batch][CONFIG_T::dense_config1::n_in],
-			   res_T     R[CONFIG_T::dense_config2::n_batch][CONFIG_T::dense_config2::n_out],
-			   typename CONFIG_T::dense_config1::weight_t  w0[CONFIG_T::dense_config1::n_in*CONFIG_T::dense_config1::n_out],
-			   typename CONFIG_T::dense_config1::bias_t    b0[CONFIG_T::dense_config1::n_out],
-			   typename CONFIG_T::dense_config2::weight_t  w1[CONFIG_T::dense_config2::n_in*CONFIG_T::dense_config2::n_out],
-			   typename CONFIG_T::dense_config2::bias_t    b1[CONFIG_T::dense_config2::n_out])
-  {
-    #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
-    data_T R0_logits[CONFIG_T::dense_config1::n_batch][CONFIG_T::dense_config1::n_out];
-    #pragma HLS ARRAY_PARTITION variable=R0_logits complete dim=0
-    nnet::dense_batch<data_T, data_T, typename CONFIG_T::dense_config1>(X, R0_logits, w0, b0);
-    data_T R0[CONFIG_T::relu_config1::n_batch][CONFIG_T::relu_config1::n_in];
-    #pragma HLS ARRAY_PARTITION variable=R0 complete dim=0
-    nnet::relu_batch<data_T, data_T, typename CONFIG_T::relu_config1>(R0_logits, R0);
-
-    if(CONFIG_T::activate_final){
-        data_T R_logits[CONFIG_T::dense_config2::n_batch][CONFIG_T::dense_config2::n_out];
-        #pragma HLS ARRAY_PARTITION variable=R_logits complete dim=0
-        nnet::dense_batch<data_T, data_T, typename CONFIG_T::dense_config2>(R0, R_logits, w1, b1);
-        nnet::relu_batch<data_T, res_T, typename CONFIG_T::relu_config2>(R_logits, R);
-    }else{
-      nnet::dense_batch<data_T, data_T, typename CONFIG_T::dense_config2>(R0, R, w1, b1);
-    }
   }
 
 }
