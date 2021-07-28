@@ -335,8 +335,8 @@ namespace nnet {
 
     //initialize indexers
     int edge_attr_start = 0 - CONFIG_T::edge_dim;
-    int edge_update_start = 0 - CONFIG_T::out_dim;
     int edge_index_start = 0 - 2;
+    int edge_update_start = 0 - CONFIG_T::out_dim;
     int edge_update_aggr_start;
 
     #pragma HLS PIPELINE II=CONFIG_T::reuse_factor
