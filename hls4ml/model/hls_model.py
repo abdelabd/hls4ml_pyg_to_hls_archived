@@ -303,7 +303,7 @@ class HLSModel(object):
         self.reader = data_reader
 
         # If not provided, assumes layer_list[0] is input, and layer_list[-1] is output
-        self.inputs = inputs if inputs is not None else [layer_list[0]['name']]
+        self.inputs = inputs if inputs is not None else [layer['name'] for layer in layer_list if layer['class_name'] == 'InputLayer']
         self.outputs = outputs if outputs is not None else [layer_list[-1]['name']]
 
         self.index = 0
@@ -701,8 +701,7 @@ class HLSModel(object):
     
 class HLSModel_GNN(HLSModel):
     def __init__(self, config, reader, layer_list):
-        inputs = [layer['name'] for layer in layer_list if layer['class_name'] == 'InputLayer']
-        super().__init__(config, reader, layer_list, inputs=inputs)
+        super().__init__(config, reader, layer_list)
         self.config.writer = VivadoWriter_GNN()
 
     def get_weights_data(self, module_name, layer_name, var_name):
