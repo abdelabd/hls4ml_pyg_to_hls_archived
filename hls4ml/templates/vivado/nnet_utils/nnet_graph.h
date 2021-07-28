@@ -295,10 +295,11 @@ namespace nnet {
     index_T edge_aggr_mask[CONFIG_T::n_node];
     #pragma HLS ARRAY_PARTITION variable=edge_aggr_mask complete dim=0
     for(int i=0; i<CONFIG_T::n_node; i++){
-        num_edge_per_node[i] = 0;
-        if(CONFIG_T::aggr==aggr_max){
-          edge_aggr_mask[i] = 0;
-        }
+      #pragma HLS UNROLL
+      num_edge_per_node[i] = 0;
+      if(CONFIG_T::aggr==aggr_max){
+        edge_aggr_mask[i] = 0;
+      }
     }
 
     // initialize edge_update_aggr_1D with appropriate values
@@ -499,12 +500,14 @@ namespace nnet {
 
       //get node attr
       data_T node_attr_i[CONFIG_T::node_dim];
+      #pragma HLS ARRAY_PARTITION variable=node_attr_i complete dim=0
       for(int j=0; j<CONFIG_T::node_dim; j++){
         #pragma HLS UNROLL
         node_attr_i[j] = node_attr_1D[node_start+j];
       }
       //get edge_aggr attr
       data_T edge_aggr_i[CONFIG_T::edge_dim];
+      #pragma HLS ARRAY_PARTITION variable=edge_aggr_i complete dim=0
       for(int j=0; j<CONFIG_T::edge_dim; j++){
         #pragma HLS UNROLL
         edge_aggr_i[j] = edge_attr_aggr_1D[edge_aggr_start+j];
@@ -517,6 +520,7 @@ namespace nnet {
 
       // send it through NN
       res_T node_update_i[CONFIG_T::out_dim];
+      #pragma HLS ARRAY_PARTITION variable=node_update_i complete dim=0
       if(CONFIG_T::activate_final){
 	    data_T node_update_logits[CONFIG_T::node_dim];
 	    #pragma HLS ARRAY_PARTITION variable=node_update_logits complete dim=0
