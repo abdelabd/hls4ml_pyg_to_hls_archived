@@ -468,8 +468,11 @@ class HLSModel(object):
 
         self.graph = OrderedDict((new_node.name, new_node) if k == old_node.name else (k, v) for k, v in self.graph.items())
 
-    def get_weights_data(self, layer_name, var_name):
-        return self.reader.get_weights_data(layer_name, var_name)
+    def get_weights_data(self, layer_name, var_name, module_name=None):
+        if module_name is not None:
+            return self.reader.get_weights_data(layer_name, var_name, module_name)
+        else:
+            return self.reader.get_weights_data(layer_name, var_name)
 
     def next_layer(self):
         self.index += 1
@@ -703,9 +706,6 @@ class HLSModel_GNN(HLSModel):
     def __init__(self, config, reader, layer_list):
         super().__init__(config, reader, layer_list)
         self.config.writer = VivadoWriter_GNN()
-
-    def get_weights_data(self, module_name, layer_name, var_name):
-        return self.reader.get_weights_data(module_name, layer_name, var_name)
 
     def _get_top_function(self):
         if self._top_function_lib is None:

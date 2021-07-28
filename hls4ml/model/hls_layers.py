@@ -1824,7 +1824,7 @@ class GraphBlock(Layer): #parent class for EdgeBlock, NodeBlock
 
         for name, module in self.submodules.items():
             if module.__class__.__name__ == 'Linear':
-                data = self.model.get_weights_data(self.name, name, 'kernel').transpose()
+                data = self.model.get_weights_data(name, 'kernel', self.name).transpose()
                 var_name = f"{self.name}_w{linear_count}"
                 self.add_weights_variable(name=var_name, var_name=var_name, data=data, quantizer=quantizer,
                                               compression=compression)
@@ -1843,7 +1843,7 @@ class GraphBlock(Layer): #parent class for EdgeBlock, NodeBlock
 
         for name, module in self.submodules.items():
             if module.__class__.__name__ == 'Linear':
-                data = self.model.get_weights_data(self.name, name, 'bias')
+                data = self.model.get_weights_data(name, 'bias', self.name)
                 var_name = f"{self.name}_b{linear_count}"
                 self.add_weights_variable(name=var_name, var_name=var_name, type_name=type_name, precision=precision,
                                               data=data, quantizer=quantizer)
