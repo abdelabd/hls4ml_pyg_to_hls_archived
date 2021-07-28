@@ -38,7 +38,6 @@ namespace nnet {
     static const unsigned n_zeros = 0;
 
     static const bool activate_final = false;
-    static const unsigned fp_int_bits = 16;
   };
 
   struct aggregate_config
@@ -89,18 +88,6 @@ namespace nnet {
       data_T reciprocal;
       reciprocal = div_table[n_edges_i];
       edge_mean_i = edge_sum_i*reciprocal;
-  }
-
-template<class data_T, class res_T>
-    void get_most_negative_num( //gets the smallest (most negative) number that can be represented in #fp_int_bits
-      data_T fp_int_bits,
-      res_T &min_rep
-    )
-  {
-    min_rep = -1;
-    for(int i=0; i<fp_int_bits-1; i++){
-      min_rep = min_rep*2;
-    }
   }
 
   template<class data_T, class res_T, typename CONFIG_T>
@@ -345,8 +332,11 @@ template<class data_T, class res_T>
       }
     }
     else{ //CONFIG_T:aggr==aggr_max, we want to initialize this with the most negative number we can represent
+      // note this only works for ap_ufixed types
       res_T most_negative_num;
-      nnet::get_most_negative_num<int, res_T>(CONFIG_T::fp_int_bits, most_negative_num);
+      most_negative_num.V = 1;
+      most_negative_num.V <<= res_T::width - 1;
+
       for(int i=0; i < CONFIG_T::n_node; i++){
         for(int j=0; j<CONFIG_T::out_dim; j++){
           #pragma HLS UNROLL

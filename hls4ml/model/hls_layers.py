@@ -2063,7 +2063,6 @@ class EdgeBlock(GraphBlock):
         params['io_type'] = 'io_parallel'
         params['reuse'] = self.reuse_factor
         params['n_zeros'] = 0
-        params['fp_int_bits'] = self.fp_type.integer
 
         aggr_map = {
             "add": 0,
