@@ -265,7 +265,7 @@ def convert_from_pytorch_model(model, input_shape, output_dir='my-hls-test', pro
 
     model_config = hls_config.get('Model', None)
     config['HLSConfig']['Model'] = _check_model_config(model_config)
-    
+
     _check_hls_config(config, hls_config)
     
     return pytorch_to_hls(config)
@@ -280,7 +280,8 @@ def check_forward_dict(model, forward_dictionary):
 def convert_from_pyg_model(model, forward_dictionary, n_node, node_dim,
                            n_edge, edge_dim, activate_final=None,
                            output_dir='my-hls-test', project_name='myproject',
-                           fpga_part='xcku115-flvb2104-2-i', clock_period=5, io_type='io_parallel', hls_config={}):
+                           fpga_part='xcku115-flvb2104-2-i', clock_period=5, io_type='io_parallel', hls_config={},
+                           resource_limit=False, par_factor=16):
     check_forward_dict(model, forward_dictionary)
     """
 
@@ -391,10 +392,17 @@ def convert_from_pyg_model(model, forward_dictionary, n_node, node_dim,
     }
     config['ForwardDictionary'] = forward_dictionary
     config['ActivateFinal'] = activate_final
+    config["ParallelizationFactor"] = par_factor
 
     model_config = hls_config.get('Model', None)
     config['HLSConfig']['Model'] = _check_model_config(model_config)
-    
+
+    if resource_limit:
+        config["gnn_resource_limit"] = "true"
+        config["HLSConfig"]["Model"]["Strategy"] = "Resource"
+    else:
+        config["gnn_resource_limit"] = "false"
+
     _check_hls_config(config, hls_config)
     
     return pyg_to_hls(config)
